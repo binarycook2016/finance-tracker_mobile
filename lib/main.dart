@@ -134,12 +134,47 @@ class _MyHomePageState extends State<MyHomePage> {
         });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final device = MediaQuery.of(context);
-    final isLandscape = device.orientation == Orientation.landscape;
+  List<Widget> _buildLandscapeLayout(offset, Widget listWidget) {
+    return [
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Text(
+            "Show Chart",
+            style: Theme.of(context).textTheme.title,
+          ),
+          Switch.adaptive(
+            activeColor: Theme.of(context).accentColor,
+            value: _chartToggle,
+            onChanged: (status) {
+              setState(() {
+                _chartToggle = status;
+              });
+            },
+          ),
+        ],
+      ),
+      _chartToggle
+          ? Container(
+              height: offset * .7,
+              child: Chart(_recentTransactions),
+            )
+          : listWidget
+    ];
+  }
 
-    final PreferredSizeWidget appBar = Platform.isIOS
+  List<Widget> _buildPortraitLayout(offset, Widget listWidget) {
+    return [
+      Container(
+        height: offset * .3,
+        child: Chart(_recentTransactions),
+      ),
+      listWidget
+    ];
+  }
+
+  Widget _buildAppBar() {
+    return Platform.isIOS
         ? CupertinoNavigationBar(
             middle: Text('Codettastone'),
             trailing: Row(
@@ -161,6 +196,14 @@ class _MyHomePageState extends State<MyHomePage> {
               )
             ],
           );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final device = MediaQuery.of(context);
+    final isLandscape = device.orientation == Orientation.landscape;
+
+    final PreferredSizeWidget appBar = _buildAppBar();
 
     final listWidget = Container(
       height: (device.size.height -
@@ -177,38 +220,8 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            if (!isLandscape)
-              Container(
-                height: offset * .3,
-                child: Chart(_recentTransactions),
-              ),
-            if (!isLandscape) listWidget,
-            if (isLandscape)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Text(
-                    "Show Chart",
-                    style: Theme.of(context).textTheme.title,
-                  ),
-                  Switch.adaptive(
-                    activeColor: Theme.of(context).accentColor,
-                    value: _chartToggle,
-                    onChanged: (status) {
-                      setState(() {
-                        _chartToggle = status;
-                      });
-                    },
-                  ),
-                ],
-              ),
-            if (isLandscape)
-              _chartToggle
-                  ? Container(
-                      height: offset * .7,
-                      child: Chart(_recentTransactions),
-                    )
-                  : listWidget
+            if (!isLandscape) ..._buildPortraitLayout(offset, listWidget),
+            if (isLandscape) ..._buildLandscapeLayout(offset, listWidget),
           ],
         ),
       ),
